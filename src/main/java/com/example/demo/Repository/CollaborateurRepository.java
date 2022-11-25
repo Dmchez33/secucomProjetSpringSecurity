@@ -13,4 +13,6 @@ public interface CollaborateurRepository extends JpaRepository<Collaborateur, Lo
     Boolean existsByUsername(String username);
 
     Boolean existsByEmail(String email);
+
+
 }
