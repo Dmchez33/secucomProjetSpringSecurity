@@ -18,60 +18,32 @@ import java.util.Set;
 @AllArgsConstructor
 @SpringBootApplication
 public class DemoApplication implements CommandLineRunner {
+
+	//**************************** DECLARATION DES INSTANCE *****************
 	@Autowired
 	PasswordEncoder encoder;
 
 	final private RoleRepository roleRepository;
+
 	final private CollaborateurRepository collaborateurRepository;
-	/*@Autowired
-	static
 
-	PasswordEncoder encoder;
-
-	static CollaborateurRepository userRepository;*/
+	//**************************** METHODE PRINCIPALE DE L'APPLICATION ***********
 	public static void main(String[] args) {
 		 SpringApplication.run(DemoApplication.class, args);
-		/*CollaborateurService collaborateurService = ctx.getBean(CollaborateurService.class);
-		Role role = new Role();
-		ApplicationContext ctx =
-		role.setId(1);
-		role.setName(ERole.ROLE_ADMIN);*/
-		/*Set<Role> roles = new HashSet<>();
-		roles.add(role);
-		SignupRequest signupRequest = new SignupRequest();
-
-		signupRequest.setEmail("admin@gmail.com");
-		signupRequest.setPassword("12345678");
-		signupRequest.setUsername("admin");
-		//signupRequest.setRole(roles);
-
-		Collaborateur user = new Collaborateur(signupRequest.getUsername(),
-				signupRequest.getEmail(),
-				encoder.encode(signupRequest.getPassword()));
-		user.setRoles(roles);
-		userRepository.save(user);
-		Collaborateur user = new Collaborateur();
-		user.setId(1L);
-		user.setEmail("admin@gmail.com");
-		user.setUsername("asmin");
-		user.setPassword("12345678");
-
-		
-		collaborateurService.CreateCollaborateur(user);*/
 
 	}
 
-
+	//***************************** METHODE PERMETTANT DE CREER UN ADMIN PAR DEFAUT **********
 	@Override
 	public void run(String... args) throws Exception {
 		//VERIFICATION DE L'EXISTANCE DU ROLE ADMIN AVANT SA CREATION
 		if (roleRepository.findAll().size() == 0){
-			roleRepository.save(new Role(ERole.ROLE_ADMIN));
-			roleRepository.save(new Role(ERole.ROLE_USER));
+			roleRepository.save(new Role(ERole.ADMIN));
+			roleRepository.save(new Role(ERole.USER));
 		}
 		if (collaborateurRepository.findAll().size() == 0){
 			Set<Role> roles = new HashSet<>();
-			Role role = roleRepository.findByName(ERole.ROLE_ADMIN);
+			Role role = roleRepository.findByName(ERole.ADMIN);
 			roles.add(role);
 			Collaborateur collaborateur = new Collaborateur("admin","admin@gmail.com",encoder.encode( "12345678"));
 			collaborateur.setRoles(roles);

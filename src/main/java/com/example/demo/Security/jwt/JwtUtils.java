@@ -27,6 +27,7 @@ public class JwtUtils {
     @Value("${bezkoder.app.jwtCookieName}")
     private String jwtCookie;
 
+    //**************************************** METHODE PERMETTANT DE STOCKER LES TOKENS DANS LE COOKIE *********
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtCookie);
         if (cookie != null) {
@@ -36,12 +37,16 @@ public class JwtUtils {
         }
     }
 
+
+    //*************************** METHODE PERMETTANT DE GENERER LE TOKEN ***************************************
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
         ResponseCookie cookie = ResponseCookie.from(jwtCookie, jwt).path("/api").maxAge(24 * 60 * 60).httpOnly(true).build();
         return cookie;
     }
 
+
+    //*************************** METHODE PERMETTANT DE SUPPRIMER LES COOKIES LORQUE L'UTILISATEUR SE DECONNECTE
     public ResponseCookie getCleanJwtCookie() {
         ResponseCookie cookie = ResponseCookie.from(jwtCookie, null).path("/api").build();
         return cookie;

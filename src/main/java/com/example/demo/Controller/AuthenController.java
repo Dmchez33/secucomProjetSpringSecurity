@@ -1,16 +1,12 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Model.Collaborateur;
-import com.example.demo.Model.ERole;
-import com.example.demo.Model.Role;
 import com.example.demo.Payload.Request.LoginRequest;
-import com.example.demo.Payload.Request.SignupRequest;
 import com.example.demo.Payload.Response.MessageResponse;
-import com.example.demo.Payload.Response.UserInfoResponse;
-import com.example.demo.Repository.CollaborateurRepository;
 import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Security.Service.UserDetailsImpl;
 import com.example.demo.Security.jwt.JwtUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -19,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -33,25 +30,19 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-//@RequestMapping("/api/auth")
+@RequestMapping("/api/auth")
 public class AuthenController {
+
+    private static final Logger Log = LoggerFactory.getLogger(AuthenController.class);
+
     @Autowired
     AuthenticationManager authenticationManager;
 
     @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
     JwtUtils jwtUtils;
 
-    @Autowired
-    private OAuth2AuthorizedClientService authorizedClientService;
-
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -65,48 +56,32 @@ public class AuthenController {
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
-        List<String> entite = new ArrayList<>(); entite.add("ROLE_USER");
-        if (roles.equals(entite))
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                    .body("BIENVENU USER");
-        else
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                    .body("BIENVENU ADMIN");
-       /* return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(new UserInfoResponse(userDetails.getId(),
-                        userDetails.getUsername(),
-                        userDetails.getEmail(),
-                        roles));*/
+
+        List<String> entite = new ArrayList<>();
+
+        roles.forEach(role ->{
+            entite.add(role);
+        });
+
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body("BIENVENU "+entite.toString().substring(1, entite.toString().length()-1));
+
     }
 
+
+    //************************************** MEHTODE PERMETTANT DE CE DECONNECTER ****************************
     @PostMapping("/signout")
     public ResponseEntity<?> logoutUser() {
+
+        Log.info("COLLABORATEUR DECONNECTER AVEC SUCCESS");
+
         ResponseCookie cookie = jwtUtils.getCleanJwtCookie();
+
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new MessageResponse("You've been signed out!"));
+                .body(new MessageResponse("DECONNEXION REUSSI"));
     }
 
-    @RequestMapping("/**")
-    private StringBuffer getOauth2LoginInfo(Principal user){
 
-        StringBuffer protectedInfo = new StringBuffer();
-
-        OAuth2AuthenticationToken authToken = ((OAuth2AuthenticationToken) user);
-        OAuth2AuthorizedClient authClient =
-                this.authorizedClientService.loadAuthorizedClient(authToken.getAuthorizedClientRegistrationId(), authToken.getName());
-        if(authToken.isAuthenticated()){
-
-            Map<String,Object> userAttributes = ((DefaultOAuth2User) authToken.getPrincipal()).getAttributes();
-
-            String userToken = authClient.getAccessToken().getTokenValue();
-            protectedInfo.append("Bienvenue, " + userAttributes.get("name")+"<br><br>");
-            protectedInfo.append("e-mail: " + userAttributes.get("email")+"<br><br>");
-            protectedInfo.append("Access Token: " + userToken+"<br><br>");
-        }
-        else{
-            protectedInfo.append("NA");
-        }
-        return protectedInfo;
-    }
 
 }
